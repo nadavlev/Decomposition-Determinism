@@ -49,8 +49,7 @@ _RULES: list[tuple[frozenset[str], str]] = [
         "Refunds are processed within 5 business days.",
     ),
     (
-        frozenset({"region", "country", "countries", "available", "uk", "united kingdom",
-                   "united states", "canada", "australia"}),
+        frozenset({"region", "country", "countries", "geography"}),
         "AcmePay is available in the United States, Canada, the United Kingdom, "
         "and Australia.",
     ),
@@ -82,7 +81,7 @@ _RULES: list[tuple[frozenset[str], str]] = [
         "security audits. All data is encrypted at rest and in transit.",
     ),
     (
-        frozenset({"support", "hours", "monday", "friday", "eastern"}),
+        frozenset({"hours", "monday", "friday", "eastern", "business hours"}),
         "AcmePay support is available Monday–Friday, 9 AM–6 PM Eastern Time.",
     ),
     (
@@ -105,11 +104,21 @@ class StubModel:
     def generate(self, prompt: str) -> str:
         """Return a canned answer based on keyword matching in *prompt*.
 
-        Checks multi-keyword rules first (any keyword in the set matching the
-        lower-cased prompt wins), then single-keyword fallbacks. Returns a
-        generic "I don't know" when nothing matches.
+        When the prompt contains a "Question: ..." section (as produced by the
+        monolith and graph pipelines), routing uses only the question text so
+        that retrieved-context keywords do not shadow the question's intent.
+        Falls back to the full prompt if no "Question:" marker is present.
+
+        Checks multi-keyword rules first (any keyword in the set matching wins),
+        then single-keyword fallbacks. Returns a generic fallback when nothing
+        matches.
         """
-        lower = prompt.lower()
+        if "Question:" in prompt:
+            # Extract the question portion; ignore retrieved-context words.
+            question_part = prompt.split("Question:", 1)[1]
+            lower = question_part.lower()
+        else:
+            lower = prompt.lower()
 
         for keyword_set, answer in _RULES:
             if any(kw in lower for kw in keyword_set):
