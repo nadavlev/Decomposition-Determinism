@@ -20,8 +20,22 @@ from src.corpus import DOCS, Doc
 WEAK_RETRIEVAL_THRESHOLD = 0.10
 
 
+_STOPWORDS = frozenset({
+    "a", "an", "the", "is", "are", "was", "were", "be", "been",
+    "have", "has", "had", "do", "does", "did", "will", "would",
+    "could", "should", "may", "might", "shall", "can",
+    "i", "you", "we", "he", "she", "it", "they",
+    "what", "which", "who", "how", "when", "where", "why",
+    "in", "on", "at", "to", "for", "of", "with", "by", "from",
+    "and", "or", "but", "not", "no", "if", "so", "as", "than",
+    "that", "this", "there", "my", "your", "its", "our", "their",
+    "about", "up", "out", "then", "than",
+})
+
+
 def _tokenize(text: str) -> list[str]:
-    return re.findall(r"[a-z0-9]+", text.lower())
+    tokens = re.findall(r"[a-z0-9]+", text.lower())
+    return [t for t in tokens if t not in _STOPWORDS and len(t) > 1]
 
 
 def _tf_idf_vectors(
