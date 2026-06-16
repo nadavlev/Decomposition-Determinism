@@ -99,6 +99,7 @@ class QuestionResult:
     is_grounded: bool            # whether the answer is actually grounded
     deciding_node: str           # graph: which node decided; monolith: "monolith (opaque)"
     trace: list[str]             # graph only; empty for monolith
+    escalation_reason: str = ""  # graph only; the reason string from the escalate node
 
 
 @dataclass
@@ -178,6 +179,7 @@ def score_graph(eval_set: list[EvalQuestion] | None = None) -> EvalResult:
         trace: list[str] = state.get("trace", [])
         deciding_node = _deciding_node_from_trace(trace)
 
+        escalation_reason = state.get("escalation_reason", "") if escalated else ""
         result.question_results.append(QuestionResult(
             eval_q=eq,
             answer=answer or "(escalated — no answer returned)",
@@ -185,6 +187,7 @@ def score_graph(eval_set: list[EvalQuestion] | None = None) -> EvalResult:
             is_grounded=grounded,
             deciding_node=deciding_node,
             trace=trace,
+            escalation_reason=escalation_reason,
         ))
     return result
 
